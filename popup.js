@@ -1,27 +1,46 @@
+// Status Check
+const statusEl = document.getElementById('status');
+chrome.storage.local.get("isAutoRunning", (data) => {
+  if (data.isAutoRunning) {
+    statusEl.textContent = "Status: Active";
+    statusEl.className = "active";
+  } else {
+    statusEl.textContent = "Status: Inactive";
+    statusEl.className = "inactive";
+  }
+});
+
 // Start Logic
 document.getElementById('startBtn').addEventListener('click', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   
-  chrome.storage.local.set({ isAutoRunning: true }, () => {
-      chrome.tabs.sendMessage(tab.id, { action: "manual_start" }, (response) => {
-        if (chrome.runtime.lastError) {
-            console.log("Content script not active yet.");
-        }
-      });
-      window.close();
-  });
+  if (!tab.url.includes('anime3rb.com/episode')) {
+    alert('Please navigate to an anime episode page first.');
+    return;
+  }
+  
+  await chrome.storage.local.set({ isAutoRunning: true });
+  try {
+    await chrome.tabs.sendMessage(tab.id, { action: "manual_start" });
+  } catch (e) {
+    alert('Could not connect to the page. Try refreshing the tab.');
+    await chrome.storage.local.set({ isAutoRunning: false });
+    return;
+  }
+  window.close();
 });
 
 // Stop Logic
-document.getElementById('stopBtn').addEventListener('click', () => {
-  chrome.storage.local.set({ isAutoRunning: false }, () => {
-      console.log("Automation disabled.");
-      // Optional: Send message to current tab to stop any pending timeouts
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          if (tabs[0]) {
-              chrome.tabs.sendMessage(tabs[0].id, { action: "stop_now" });
-          }
-      });
-      window.close();
-  });
+document.getElementById('stopBtn').addEventListener('click', async () => {
+  await chrome.storage.local.set({ isAutoRunning: false });
+  
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab.url.includes('anime3rb.com/episode')) {
+    try {
+      await chrome.tabs.sendMessage(tab.id, { action: "stop_now" });
+    } catch (e) {
+      console.log("Could not connect to tab to stop.");
+    }
+  }
+  window.close();
 });
