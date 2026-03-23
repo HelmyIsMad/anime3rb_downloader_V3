@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Anime3rb Automator",
-  "version": "1.3",
+  "version": "1.5",
   "permissions": ["downloads", "tabs", "scripting", "activeTab", "storage"],
   "host_permissions": ["https://anime3rb.com/episode/*"],
   "action": {

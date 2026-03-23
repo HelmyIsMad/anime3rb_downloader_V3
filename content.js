@@ -1,4 +1,30 @@
 let activeTimeout = null;
+let nextEpisodeUrl = null;
+
+async function getNextEpisodeUrl() {
+    const iframe = document.querySelector('iframe');
+    if (!iframe) return null;
+
+    try {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        const nextBtn = iframeDoc.querySelector('a.next-episode, a[href*="next"], button.next-episode, button[data-next]');
+        
+        if (nextBtn && nextBtn.href) {
+            return nextBtn.href;
+        }
+        return null;
+    } catch (e) {
+        console.log("Could not access iframe:", e);
+        return null;
+    }
+}
+
+async function saveNextEpisodeUrl() {
+    nextEpisodeUrl = await getNextEpisodeUrl();
+    if (nextEpisodeUrl) {
+        console.log("Next episode URL saved:", nextEpisodeUrl);
+    }
+}
 
 function cleanPage() {
     const iframes = document.querySelectorAll('iframe');
@@ -7,6 +33,7 @@ function cleanPage() {
 }
 
 async function startAutomation() {
+    await saveNextEpisodeUrl();
     cleanPage();
 
     const downloadBtnHolder = document.querySelector('div.flex-grow.flex.flex-wrap.gap-4.justify-center'); 
@@ -55,11 +82,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     if (request.action === "download_complete") {
         sendResponse({status: "ok"});
-        const urlParts = window.location.href.split('/');
-        let episode_no = parseInt(urlParts.pop());
-
-        if (!isNaN(episode_no)) {
-            window.location.href = urlParts.join('/') + '/' + (episode_no + 1);
+        if (nextEpisodeUrl) {
+            console.log("Next episode found. Navigating...");
+            window.location.href = nextEpisodeUrl;
+        } else {
+            console.log("No next episode button found. Stopping.");
+            chrome.storage.local.set({ isAutoRunning: false });
         }
     }
     return true; 
