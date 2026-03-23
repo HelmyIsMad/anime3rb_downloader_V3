@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Anime3rb Automator",
+  "version": "1.3",
+  "permissions": ["downloads", "tabs", "scripting", "activeTab", "storage"],
+  "host_permissions": ["https://anime3rb.com/episode/*"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://anime3rb.com/episode/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
