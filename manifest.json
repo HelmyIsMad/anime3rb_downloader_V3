@@ -1,7 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Anime3rb Automator",
-  "version": "1.5",
+  "version": "1.6",
+  "description": "anime3rb.com downloader - Easily download anime episodes from anime3rb.com. How it works: Click the extension icon while on an episode page to start downloading. It will automatically keep downloading episodes until the end of the series or until you stop it.",
+  "icons": {
+    "128": "icon.png"
+  },
   "permissions": ["downloads", "tabs", "scripting", "activeTab", "storage"],
   "host_permissions": ["https://anime3rb.com/episode/*"],
   "action": {

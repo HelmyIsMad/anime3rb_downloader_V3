@@ -1,28 +1,38 @@
 let activeTimeout = null;
 let nextEpisodeUrl = null;
+let finalEpisodeNum = null;
 
-async function getNextEpisodeUrl() {
-    const iframe = document.querySelector('iframe');
-    if (!iframe) return null;
-
-    try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        const nextBtn = iframeDoc.querySelector('a.next-episode, a[href*="next"], button.next-episode, button[data-next]');
-        
-        if (nextBtn && nextBtn.href) {
-            return nextBtn.href;
-        }
-        return null;
-    } catch (e) {
-        console.log("Could not access iframe:", e);
-        return null;
+function getFinalEpisodeNum() {
+    const episodeList = document.querySelector('div.video-data').parentNode.parentNode;
+    if (!episodeList) return null;
+    
+    const links = episodeList.querySelectorAll('a');
+    if (links.length === 0) return null;
+    
+    const lastLink = links[links.length - 1];
+    const hrefParts = lastLink.href.split('/');
+    const epNum = parseInt(hrefParts.pop());
+    
+    if (!isNaN(epNum)) {
+        console.log("Final episode number:", epNum);
+        return epNum;
     }
+    return null;
 }
 
 async function saveNextEpisodeUrl() {
-    nextEpisodeUrl = await getNextEpisodeUrl();
-    if (nextEpisodeUrl) {
-        console.log("Next episode URL saved:", nextEpisodeUrl);
+    finalEpisodeNum = getFinalEpisodeNum();
+    if (finalEpisodeNum) {
+        const currentUrlParts = window.location.href.split('/');
+        const currentEpNum = parseInt(currentUrlParts.pop());
+        
+        if (!isNaN(currentEpNum) && currentEpNum < finalEpisodeNum) {
+            nextEpisodeUrl = currentUrlParts.join('/') + '/' + (currentEpNum + 1);
+            console.log("Next episode URL:", nextEpisodeUrl);
+        } else {
+            console.log("Already at final episode.");
+            nextEpisodeUrl = null;
+        }
     }
 }
 
